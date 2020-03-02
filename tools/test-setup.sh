@@ -19,7 +19,7 @@ PYTHON=$(command -v python3 python|head -n1)
 PKG_CMD=$(command -v dnf yum apt-get|head -n1)
 
 if [ -f /etc/debian_version ]; then
-	sudo $PKG_CMD install -y `basename $PYTHON`-pip
+    sudo $PKG_CMD install -y `basename $PYTHON`-pip
 fi
 
 sudo $PYTHON -m pip install -U tox "zipp<0.6.0;python_version=='2.7'"
@@ -44,10 +44,10 @@ vagrant plugin list | grep vagrant-libvirt || {
 }
 
 if [ -f /etc/debian_version ]; then
-	dpkg -l | grep libselinux
-	[ -x /usr/bin/aa-enabled ] && echo "Apparmor: `/usr/bin/aa-enabled`"
+    dpkg -l | grep libselinux
+    [ -x /usr/bin/aa-enabled ] && echo "Apparmor: `/usr/bin/aa-enabled`"
 else
-	rpm -qa | grep libselinux
+    rpm -qa | grep libselinux
 fi
 
 vagrant version

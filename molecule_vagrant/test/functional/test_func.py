@@ -23,6 +23,8 @@ import pytest
 import os
 import sh
 import distro
+from shutil import which
+import vagrant
 
 from molecule import util
 from molecule import logger
@@ -63,10 +65,8 @@ def test_command_init_scenario(temp_dir):
         run_command(cmd)
 
 
-@pytest.mark.parametrize(
-    "scenario", [("vagrant_root"), ("config_options"), ("provider_config_options")]
-)
-def test_vagrant_root(temp_dir, scenario):
+@pytest.mark.parametrize("scenario", [("vagrant_root"), ("config_options")])
+def test_scenario(temp_dir, scenario):
     options = {"scenario_name": scenario}
 
     env = os.environ
@@ -74,6 +74,47 @@ def test_vagrant_root(temp_dir, scenario):
         env.update({"VIRT_DRIVER": "'qemu'"})
         if distro.name() == "Ubuntu" and distro.codename() == "bionic":
             env.update({"TESTBOX": "centos/7"})
+
+    scenario_directory = os.path.join(
+        os.path.dirname(util.abs_path(__file__)), os.path.pardir, "scenarios"
+    )
+
+    with change_dir_to(scenario_directory):
+        cmd = sh.molecule.bake("test", **options)
+        run_command(cmd)
+
+
+@pytest.mark.parametrize("scenario", [("provider_config_options_libvirt")])
+@pytest.mark.skipif(
+    next(
+        (p for p in vagrant.Vagrant().plugin_list() if p.name == "vagrant-libvirt"),
+        None,
+    )
+    is None,
+    reason="vagrant-libvirt not installed",
+)
+def test_scenario_libvirt(temp_dir, scenario):
+    options = {"scenario_name": scenario}
+
+    env = os.environ
+    if not os.path.exists("/dev/kvm"):
+        env.update({"VIRT_DRIVER": "'qemu'"})
+        if distro.name() == "Ubuntu" and distro.codename() == "bionic":
+            env.update({"TESTBOX": "centos/7"})
+
+    scenario_directory = os.path.join(
+        os.path.dirname(util.abs_path(__file__)), os.path.pardir, "scenarios"
+    )
+
+    with change_dir_to(scenario_directory):
+        cmd = sh.molecule.bake("test", **options)
+        run_command(cmd)
+
+
+@pytest.mark.parametrize("scenario", [("provider_config_options_vbox")])
+@pytest.mark.skipif(which("VBoxManage") is None, reason="Virtualbox not installed")
+def test_scenario_vbox(temp_dir, scenario):
+    options = {"scenario_name": scenario}
 
     scenario_directory = os.path.join(
         os.path.dirname(util.abs_path(__file__)), os.path.pardir, "scenarios"

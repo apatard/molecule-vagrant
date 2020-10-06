@@ -22,6 +22,7 @@
 import pytest
 import os
 import sh
+import distro
 
 from molecule import util
 from molecule import logger
@@ -51,6 +52,8 @@ def test_command_init_scenario(temp_dir):
         if "TESTBOX" in env:
             conf["platforms"][0]["box"] = env["TESTBOX"]
         if not os.path.exists("/dev/kvm"):
+            if distro.name() == "Ubuntu" and distro.codename() == "bionic":
+                conf["platforms"][0]["box"] = "centos/7"
             conf["driver"]["provider"] = {"name": "libvirt"}
             for p in conf["platforms"]:
                 p["provider_options"] = {"driver": '"qemu"'}
@@ -69,6 +72,8 @@ def test_vagrant_root(temp_dir, scenario):
     env = os.environ
     if not os.path.exists("/dev/kvm"):
         env.update({"VIRT_DRIVER": "'qemu'"})
+        if distro.name() == "Ubuntu" and distro.codename() == "bionic":
+            env.update({"TESTBOX": "centos/7"})
 
     scenario_directory = os.path.join(
         os.path.dirname(util.abs_path(__file__)), os.path.pardir, "scenarios"
